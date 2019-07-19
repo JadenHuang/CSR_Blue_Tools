@@ -1,0 +1,6 @@
+﻿v0.0.2
+- Solve the problem that the red error message appears and the next time "download" still occurs
+
+
+v0.0.1
+- Initial version

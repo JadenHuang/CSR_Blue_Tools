@@ -573,10 +573,10 @@ class MyFrame1 ( wx.Frame ):
 	def DownLoadChick( self, event ):
 		try:
 			if  self.working == 0:
-				self.working = 1
-
 				#Clear GUI display data
 				self.RecoveryInterface()
+				self.working = 1
+
 				if self.firmware != None:
 		            #Read the Bluetooth address of the GUI interface
 					nap=self.m_textCtrl2.GetValue()
@@ -634,7 +634,7 @@ class MyFrame1 ( wx.Frame ):
 			
 
 	def OnCloseMe(self, event):
-		wx.MessageBox("Version information:\nv0.0.1", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
+		wx.MessageBox("Version information:\nv0.0.2", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
 
 	def DetectDrive(self,event):
 		if  self.working == 0:
