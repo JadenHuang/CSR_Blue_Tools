@@ -35,7 +35,7 @@ wx.ID_edit = 1005
 
 class MyFrame1 ( wx.Frame ):
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"GT_QCFlash", pos = wx.DefaultPosition, size = wx.Size( 685,573 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"GT_QCFlash", pos = wx.DefaultPosition, size = wx.Size( 685,573 ), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER ^ wx.MAXIMIZE_BOX )
 	
 	  	self.g = g()
 	  	self.working = 0  #Show current idle status
@@ -55,6 +55,19 @@ class MyFrame1 ( wx.Frame ):
 		self.csrflashlib.flmGetAvailableSpiPorts()
 		self.devicenumber = int(self.numPortFound)
 		self.DeviceList = self.portsBuf.split(",")
+
+		#Remove drivers that are not "USB SPI"
+		NotSpiNumber = 0
+		for i in range(self.devicenumber):
+			if (self.DeviceList[i])[0:7] != "USB SPI":
+				NotSpiNumber +=1
+				print (self.DeviceList[i])
+				del self.DeviceList[i]
+
+
+		self.devicenumber= self.devicenumber - NotSpiNumber
+
+
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_3DLIGHT ) )
@@ -299,17 +312,30 @@ class MyFrame1 ( wx.Frame ):
 
 		self.Show(True)  
 
-
 	#Restore the original interface
 	def RecoveryInterface(self):
 		if  self.working == 0:
+			self.csrflashlib.flmClose(self.devicenumber)
+			self.csrflashlib.flInit()
 			(self.portsBuf,self.transBuf,self.numPortFound) = self.csrflashlib.flmGetAvailableSpiPorts()
 			self.devicenumber = int(self.numPortFound)
+			self.DeviceList = self.portsBuf.split(",")
+
+			#Remove drivers that are not "USB SPI"
+			NotSpiNumber = 0
+			for i in range(self.devicenumber):
+				if (self.DeviceList[i])[0:7] != "USB SPI":
+					NotSpiNumber +=1
+					print (self.DeviceList[i])
+					del self.DeviceList[i]
+
+			self.devicenumber= self.devicenumber - NotSpiNumber
+
 			for i in range(8):
 				getattr(self, 'm_staticText' +str(i+13)).SetLabel("BT Address") 
 				getattr(self, 'm_staticText' +str(i+3)).SetForegroundColour( wx.Colour( 0, 0, 0 ) )
 				#getattr(self, 'm_staticText' +str(i+3)).SetLabel("Device %d"%(i+1))   
-				if i < self.numPortFound:
+				if i < self.devicenumber:
 					getattr(self, 'm_staticText' +str(i+3)).SetLabel(self.DeviceList[i]) 
 				else:
 					getattr(self, 'm_staticText' +str(i+3)).SetLabel("unknow") 
@@ -634,19 +660,14 @@ class MyFrame1 ( wx.Frame ):
 			
 
 	def OnCloseMe(self, event):
-		wx.MessageBox("Version information:\nv0.0.2", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
+		wx.MessageBox("Version information:\nv0.0.3", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
 
 	def DetectDrive(self,event):
 		if  self.working == 0:
 			#Clear GUI display data
 			self.RecoveryInterface()
-			self.csrflashlib.flmClose(self.devicenumber)
-			self.csrflashlib.flInit()
-			(self.portsBuf,self.transBuf,self.numPortFound) = self.csrflashlib.flmGetAvailableSpiPorts()
-			self.devicenumber = int(self.numPortFound)
-			self.DeviceList = self.portsBuf.split(",")
 			for i in range(8):
-				if i < self.numPortFound:
+				if i < self.devicenumber:
 					getattr(self, 'm_staticText' +str(i+3)).SetLabel(self.DeviceList[i]) 
 				else:
 					getattr(self, 'm_staticText' +str(i+3)).SetLabel("unknow") 
