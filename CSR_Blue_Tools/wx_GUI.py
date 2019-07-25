@@ -660,7 +660,7 @@ class MyFrame1 ( wx.Frame ):
 			
 
 	def OnCloseMe(self, event):
-		wx.MessageBox("Version information:\nv0.0.3", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
+		wx.MessageBox("Version information:\nv0.0.4", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
 
 	def DetectDrive(self,event):
 		if  self.working == 0:

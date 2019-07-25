@@ -57,34 +57,32 @@ class Customization(with_metaclass(Singleton, object)):
                 uap = 0xff
             readBackAddr = ("{:04X}{:02X}{:06X}".format(nap, uap, lap ))
             print ("Read back address : {}".format(readBackAddr ))
+
+            self.csrLib.closeTestEngine(self.csrLib.dutport)
+            self.csrLib.dutport = 0
+            self.csrlib.spiHandle = 0
+
             if (readBackAddr == self.g.serial):
                 print ("Verification OK")
+                # msg = "DUT BDADDR : {}".format(self.g.serial)
+                # self.logger.info(msg)
+                self.IncrementSerial()
                 return True
 
             else:
                 print "Verification Fail"
-                return False
+                #raise CustomizationError("address verification fail")
                 # msg = u'(0x21006) Write address error BT-ADDR:[' + self.g.serial + ']'
                 # self.logger.info(msg)
-                self.csrLib.closeTestEngine(self.csrLib.dutport)
-                self.csrLib.closeTestEngine(self.csrLib.dutport)
-                self.csrLib.dutport = 0
-                self.csrlib.spiHandle = 0
-                raise CustomizationError("address verification fail")
+                return False
+
         else:
+            self.csrLib.closeTestEngine(self.csrLib.dutport)
+            self.csrLib.dutport = 0
+            self.csrlib.spiHandle = 0
+
+            print ("Closing SPI port for DUT")    
             return False
-
-       
-        self.csrLib.closeTestEngine(self.csrLib.dutport)
-        self.csrLib.dutport = 0
-        self.csrlib.spiHandle = 0
-
-        print ("Closing SPI port for DUT")    
-        return 0
-        
-        # msg = "DUT BDADDR : {}".format(self.g.serial)
-        # self.logger.info(msg)
-        self.IncrementSerial()
 
             
 
