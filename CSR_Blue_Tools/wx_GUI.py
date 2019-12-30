@@ -39,7 +39,8 @@ class MyFrame1 ( wx.Frame ):
 	
 	  	self.g = g()
 	  	self.working = 0  #Show current idle status
-		self.devicenumber = 1
+	  	self.ChipSelect = 0 #0 is 8670, 1 is QCC300x
+		self.devicenumber = 1 
 		self.portnumber = 0
 		self.DeviceErrorsNumber = 0 
 		self.command = None
@@ -344,7 +345,7 @@ class MyFrame1 ( wx.Frame ):
 				self.m_staticText1.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOTEXT ) )
 				self.m_staticText1.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 
-	def DownloadProcess(self,filename):   
+	def DownloadProcess_BC867x(self,filename):   
 		#Turn on multi-burning
 		Errordetect = []
 		StartTime = datetime.datetime.now()
@@ -595,6 +596,28 @@ class MyFrame1 ( wx.Frame ):
 				self.m_staticText1.SetLabel("Select the burning file as:\n"+self.firmware)
 				self.working = 0
 
+	def DownloadProcess_QC30x(self,filename):   
+		self.m_staticText1.SetLabel( "QCC300x Downloading.....")
+		msg = "BT firmware : {}".format(os.path.basename(self.firmware))
+		print(msg)
+		exe_path = os.getcwd() + "\\CSR_Blue_Tools\\dlls\\CSR_BT\\nvscmd.exe"
+		command = "\""+exe_path+"\""+" burn "+ "\"" + self.firmware +"\""
+		print (command)
+		try:
+			ret = subprocess.check_call(command)
+			print ret
+			self.WriteAddressFlag = self.AutomaticWriteAddress(0)
+			if self.WriteAddressFlag == False:
+				getattr(self, 'm_staticText' +str(3)).SetForegroundColour( wx.Colour( 255, 0, 0 ) )
+				getattr(self, 'm_staticText' +str(3)).SetLabel(self.DeviceList[1])
+				getattr(self, 'm_gauge' +str(3)).SetValue(0)   
+			self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) )
+			self.m_staticText1.SetForegroundColour('green')
+			self.m_staticText1.SetLabel("QCC300x Download successfully")
+		except subprocess.CalledProcessError as exc:
+			self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) )
+			self.m_staticText1.SetForegroundColour('red')
+			self.m_staticText1.SetLabel("QCC300x Programming failed")
 
 	def DownLoadChick( self, event ):
 		try:
@@ -613,9 +636,16 @@ class MyFrame1 ( wx.Frame ):
 					if(len(verify_ID) ==12 and len(nap) ==4 and len(uap) == 2 and len(lap) == 6):
 						#Set the text font size displayed by the GUI interface
 						self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) )
-						self.m_staticText1.SetLabel( "Downloading.....")
-						#Open thread for multiple groups of burning
-						thread.start_new_thread(self.DownloadProcess,(self.firmware,))
+						
+						if self.ChipSelect == 0:
+							self.m_staticText1.SetLabel( "BC867x Downloading.....")
+							#Open thread for multiple groups of burning
+							thread.start_new_thread(self.DownloadProcess_BC867x,(self.firmware,))
+						elif self.ChipSelect == 1:
+							thread.start_new_thread(self.DownloadProcess_QC30x,(self.firmware,))
+							
+
+
 					else: #An error message will appear if the production Bluetooth address is not entered correctly
 						self.m_staticText1.SetFont( wx.Font( 15, 70, 90, 90, False, wx.EmptyString ) )
 						self.m_staticText1.SetForegroundColour('red')
@@ -642,25 +672,43 @@ class MyFrame1 ( wx.Frame ):
 
 	def EraseClick( self, event ):
 		if  self.working == 0:
-			#Clear GUI display data
-			self.RecoveryInterface()
-			self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) ) 
-			if(self.csrflashlib.flmOpen(self.devicenumber) == True):
-				print("flmOpem successfully")
-				EraseState = self.csrflashlib.flmEraseBlock(self.devicenumber)
-				if EraseState == 0:
-					self.m_staticText1.SetForegroundColour('green')
-					#self.m_staticText1.SetLabel("\n   This feature is not implemented!")
-					self.m_staticText1.SetLabel("All Erase Successfully")
-				else:
-					self.m_staticText1.SetForegroundColour('red')
-					self.m_staticText1.SetLabel("   Erase Fail!")
+			if self.ChipSelect == 0:
+				#Clear GUI display data
+				self.RecoveryInterface()
+				self.m_staticText1.SetLabel( "BC867x Erase.....")
+				self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) ) 
+				if(self.csrflashlib.flmOpen(self.devicenumber) == True):
+					print("flmOpem successfully")
+					EraseState = self.csrflashlib.flmEraseBlock(self.devicenumber)
+					if EraseState == 0:
+						self.m_staticText1.SetForegroundColour('green')
+						#self.m_staticText1.SetLabel("\n   This feature is not implemented!")
+						self.m_staticText1.SetLabel("All Erase Successfully")
+					else:
+						self.m_staticText1.SetForegroundColour('red')
+						self.m_staticText1.SetLabel("   Erase Fail!")
 
-			self.csrflashlib.flmClose(self.devicenumber)
-			
+				self.csrflashlib.flmClose(self.devicenumber)
+			elif self.ChipSelect == 1:
+				self.RecoveryInterface()
+				self.m_staticText1.SetLabel( "QCC300x Erase.....")
+				exe_path = os.getcwd() + "\\CSR_Blue_Tools\\dlls\\CSR_BT\\nvscmd.exe"
+				command = "\""+exe_path+"\""+" erase "
+				print (command)
+				try:
+					ret = subprocess.check_call(command)
+					print ret
+					self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) )
+					self.m_staticText1.SetForegroundColour('green')
+					self.m_staticText1.SetLabel("QCC300x Erase successfully")
+				except subprocess.CalledProcessError as exc:
+					self.m_staticText1.SetFont( wx.Font( 25, 70, 90, 90, False, wx.EmptyString ) )
+					self.m_staticText1.SetForegroundColour('red')
+					self.m_staticText1.SetLabel("QCC300x Erase failed")
+
 
 	def OnCloseMe(self, event):
-		wx.MessageBox("Version information:\nv0.0.4", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
+		wx.MessageBox("Version information:\nv0.0.5", "About GT_QCFlash" ,wx.OK | wx.ICON_INFORMATION)
 
 	def DetectDrive(self,event):
 		if  self.working == 0:
@@ -676,11 +724,11 @@ class MyFrame1 ( wx.Frame ):
 		self.RecoveryInterface()
 		if self.m_choice4.GetString(self.m_choice4.GetSelection()) == "BC867x":
 			self.working = 0
+			self.ChipSelect = 0
 			print(self.m_choice4.GetString(self.m_choice4.GetSelection()))
 			self.m_staticText1.SetLabel("Selected BC867x module")
 		if self.m_choice4.GetString(self.m_choice4.GetSelection()) == "QCC300x":
-			self.working = 1
+			self.working = 0
+			self.ChipSelect = 1
 			print(self.m_choice4.GetString(self.m_choice4.GetSelection()))
-			self.m_staticText1.SetForegroundColour('red')
-			self.m_staticText1.SetLabel("Selected QCC300x module.\nThis module function is not enabled")
-			print("This module function is not enabled")
+			self.m_staticText1.SetLabel("Selected QC306x module")

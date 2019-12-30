@@ -1,4 +1,7 @@
-﻿v0.0.4
+﻿v0.0.5
+-Add QCC300x functionality
+
+v0.0.4
 -Optimize the burning time and solve the problem of one module dragging the legs
 
 v0.0.3
